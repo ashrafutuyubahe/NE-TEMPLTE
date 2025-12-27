@@ -61,17 +61,34 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div className="container">
-      <div className="card" style={{ maxWidth: '400px', margin: '50px auto' }}>
-        <h2>Login</h2>
+    <div className="container" style={{ 
+      minHeight: 'calc(100vh - 200px)', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      padding: '40px 20px'
+    }}>
+      <div className="card" style={{ 
+        maxWidth: '440px', 
+        width: '100%',
+        margin: '0 auto',
+        boxShadow: 'var(--shadow-xl)'
+      }}>
+        <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+          <h2 style={{ marginBottom: '8px' }}>Welcome Back</h2>
+          <p style={{ color: 'var(--neutral-600)', fontSize: '0.9375rem' }}>
+            Sign in to access your library account
+          </p>
+        </div>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Email</label>
+            <label>Email Address</label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="Enter your email"
               required
             />
           </div>
@@ -81,15 +98,31 @@ const Login = ({ onLogin }) => {
               type="password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="Enter your password"
               required
             />
           </div>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            disabled={loading}
+            style={{ width: '100%', marginTop: '8px' }}
+          >
+            {loading ? 'Logging in...' : 'Sign In'}
           </button>
         </form>
-        <p style={{ marginTop: '15px' }}>
-          Don't have an account? <Link to="/register">Register</Link>
+        <p style={{ marginTop: '24px', textAlign: 'center', color: 'var(--neutral-600)', fontSize: '0.875rem' }}>
+          Don't have an account?{' '}
+          <Link 
+            to="/register" 
+            style={{ 
+              color: 'var(--primary-600)', 
+              textDecoration: 'none', 
+              fontWeight: 500 
+            }}
+          >
+            Create an account
+          </Link>
         </p>
       </div>
     </div>

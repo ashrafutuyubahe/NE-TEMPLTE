@@ -102,27 +102,41 @@ const Books = ({ user }) => {
 
   return (
     <div className="container">
-      <h1>Books</h1>
+      <div style={{ marginBottom: '32px' }}>
+        <h1>Books</h1>
+        <p style={{ color: 'var(--neutral-600)', fontSize: '1.125rem', marginTop: '-8px' }}>
+          Browse and borrow from our collection
+        </p>
+      </div>
       {message && (
         <div className={`alert ${message.includes('success') ? 'alert-success' : 'alert-error'}`}>
           {message}
         </div>
       )}
-      <form onSubmit={handleSearch} style={{ marginBottom: '20px' }}>
-        <input
-          type="text"
-          placeholder="Search books by title, author, or ISBN..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ width: '70%', display: 'inline-block' }}
-        />
-        <button type="submit" className="btn btn-primary">Search</button>
-        <button type="button" className="btn btn-secondary" onClick={() => {
-          setSearch('');
-          setLoading(true);
-          fetchBooks();
-        }}>Clear</button>
-      </form>
+      <div className="card" style={{ marginBottom: '24px', padding: '24px' }}>
+        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Search books by title, author, or ISBN..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ flex: '1 1 300px', minWidth: '200px', margin: 0 }}
+          />
+          <button type="submit" className="btn btn-primary" style={{ margin: 0 }}>Search</button>
+          <button 
+            type="button" 
+            className="btn btn-secondary" 
+            onClick={() => {
+              setSearch('');
+              setLoading(true);
+              fetchBooks();
+            }}
+            style={{ margin: 0 }}
+          >
+            Clear
+          </button>
+        </form>
+      </div>
       <div className="card">
         <table className="table">
           <thead>

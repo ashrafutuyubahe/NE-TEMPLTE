@@ -42,35 +42,56 @@ const Register = ({ onLogin }) => {
   };
 
   return (
-    <div className="container">
-      <div className="card" style={{ maxWidth: '400px', margin: '50px auto' }}>
-        <h2>Register</h2>
+    <div className="container" style={{ 
+      minHeight: 'calc(100vh - 200px)', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      padding: '40px 20px'
+    }}>
+      <div className="card" style={{ 
+        maxWidth: '440px', 
+        width: '100%',
+        margin: '0 auto',
+        boxShadow: 'var(--shadow-xl)'
+      }}>
+        <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+          <h2 style={{ marginBottom: '8px' }}>Create Account</h2>
+          <p style={{ color: 'var(--neutral-600)', fontSize: '0.9375rem' }}>
+            Sign up to start using the library system
+          </p>
+        </div>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>First Name</label>
-            <input
-              type="text"
-              value={formData.firstName}
-              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              required
-            />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label>First Name</label>
+              <input
+                type="text"
+                value={formData.firstName}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                placeholder="John"
+                required
+              />
+            </div>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label>Last Name</label>
+              <input
+                type="text"
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                placeholder="Doe"
+                required
+              />
+            </div>
           </div>
           <div className="form-group">
-            <label>Last Name</label>
-            <input
-              type="text"
-              value={formData.lastName}
-              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Email</label>
+            <label>Email Address</label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="john.doe@example.com"
               required
             />
           </div>
@@ -80,16 +101,32 @@ const Register = ({ onLogin }) => {
               type="password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="Minimum 6 characters"
               required
               minLength={6}
             />
           </div>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Registering...' : 'Register'}
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            disabled={loading}
+            style={{ width: '100%', marginTop: '8px' }}
+          >
+            {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
-        <p style={{ marginTop: '15px' }}>
-          Already have an account? <Link to="/login">Login</Link>
+        <p style={{ marginTop: '24px', textAlign: 'center', color: 'var(--neutral-600)', fontSize: '0.875rem' }}>
+          Already have an account?{' '}
+          <Link 
+            to="/login" 
+            style={{ 
+              color: 'var(--primary-600)', 
+              textDecoration: 'none', 
+              fontWeight: 500 
+            }}
+          >
+            Sign in
+          </Link>
         </p>
       </div>
     </div>

@@ -38,25 +38,61 @@ const Dashboard = ({ user }) => {
 
   return (
     <div className="container">
-      <h1>Dashboard</h1>
-      <div style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
-        <div className="card" style={{ flex: 1 }}>
-          <h3>Pending Requests</h3>
-          <p style={{ fontSize: '32px', fontWeight: 'bold' }}>{stats.pending}</p>
+      <div style={{ marginBottom: '32px' }}>
+        <h1>Dashboard</h1>
+        <p style={{ color: 'var(--neutral-600)', fontSize: '1.125rem', marginTop: '-8px' }}>
+          Overview of your library activity
+        </p>
+      </div>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+        gap: '24px', 
+        marginBottom: '32px' 
+      }}>
+        <div className="card" style={{ 
+          background: 'linear-gradient(135deg, var(--warning-50) 0%, white 100%)',
+          borderLeft: '4px solid var(--warning-500)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <h3 style={{ margin: 0, color: 'var(--neutral-800)', fontSize: '1rem', fontWeight: 600 }}>Pending Requests</h3>
+          </div>
+          <p style={{ fontSize: '3rem', fontWeight: 700, color: 'var(--warning-600)', margin: 0, lineHeight: 1 }}>{stats.pending}</p>
+          <p style={{ color: 'var(--neutral-500)', fontSize: '0.875rem', marginTop: '8px', margin: 0 }}>Awaiting approval</p>
         </div>
-        <div className="card" style={{ flex: 1 }}>
-          <h3>Approved</h3>
-          <p style={{ fontSize: '32px', fontWeight: 'bold' }}>{stats.approved}</p>
+        <div className="card" style={{ 
+          background: 'linear-gradient(135deg, var(--success-50) 0%, white 100%)',
+          borderLeft: '4px solid var(--success-500)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <h3 style={{ margin: 0, color: 'var(--neutral-800)', fontSize: '1rem', fontWeight: 600 }}>Approved</h3>
+          </div>
+          <p style={{ fontSize: '3rem', fontWeight: 700, color: 'var(--success-600)', margin: 0, lineHeight: 1 }}>{stats.approved}</p>
+          <p style={{ color: 'var(--neutral-500)', fontSize: '0.875rem', marginTop: '8px', margin: 0 }}>Active borrowings</p>
         </div>
-        <div className="card" style={{ flex: 1 }}>
-          <h3>Returned</h3>
-          <p style={{ fontSize: '32px', fontWeight: 'bold' }}>{stats.returned}</p>
+        <div className="card" style={{ 
+          background: 'linear-gradient(135deg, var(--primary-50) 0%, white 100%)',
+          borderLeft: '4px solid var(--primary-500)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <h3 style={{ margin: 0, color: 'var(--neutral-800)', fontSize: '1rem', fontWeight: 600 }}>Returned</h3>
+          </div>
+          <p style={{ fontSize: '3rem', fontWeight: 700, color: 'var(--primary-600)', margin: 0, lineHeight: 1 }}>{stats.returned}</p>
+          <p style={{ color: 'var(--neutral-500)', fontSize: '0.875rem', marginTop: '8px', margin: 0 }}>Completed requests</p>
         </div>
       </div>
-      <div className="card" style={{ marginTop: '20px' }}>
-        <h2>Welcome, {user.firstName} {user.lastName}!</h2>
-        <p>Role: <span className="badge badge-info">{user.role}</span></p>
-        <p>Email: {user.email}</p>
+      <div className="card" style={{ marginTop: '32px' }}>
+        <h2 style={{ marginBottom: '16px' }}>Welcome, {user.firstName} {user.lastName}!</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ color: 'var(--neutral-600)', fontWeight: 500, minWidth: '80px' }}>Role:</span>
+            <span className="badge badge-info" style={{ textTransform: 'capitalize' }}>{user.role}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ color: 'var(--neutral-600)', fontWeight: 500, minWidth: '80px' }}>Email:</span>
+            <span style={{ color: 'var(--neutral-700)' }}>{user.email}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
