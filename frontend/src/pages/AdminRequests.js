@@ -10,6 +10,7 @@ const AdminRequests = () => {
 
   useEffect(() => {
     fetchRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const fetchRequests = async () => {

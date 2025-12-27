@@ -189,11 +189,11 @@ export class BorrowController {
         borrowRequest,
       });
     } catch (error) {
-      logError(error as Error, {
-        action: 'createBorrowRequest',
-        userId: req.user?.id,
-        bookId: createBorrowDto.bookId,
-      });
+      // logError(error as Error, {
+      //   action: 'createBorrowRequest',
+      //   userId: req.user?.id,
+      //   bookId: createBorrowDto.bookId,
+      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -292,11 +292,11 @@ export class BorrowController {
         borrowRequest,
       });
     } catch (error) {
-      logError(error as Error, {
-        action: 'getBorrowRequestById',
-        requestId: id,
-        userId: req.user?.id,
-      });
+      // logError(error as Error, {
+      //   action: 'getBorrowRequestById',
+      //   requestId: id,
+      //   userId: req.user?.id,
+      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -519,11 +519,11 @@ export class BorrowController {
         borrowRequest,
       });
     } catch (error) {
-      logError(error as Error, {
-        action: 'updateBorrowRequest',
-        requestId: id,
-        adminId: req.user?.id,
-      });
+      // logError(error as Error, {
+      //   action: 'updateBorrowRequest',
+      //   requestId: id,
+      //   adminId: req.user?.id,
+      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }

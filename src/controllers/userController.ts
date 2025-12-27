@@ -4,6 +4,7 @@ import { AppDataSource } from '../config/data-source';
 import { User, UserRole } from '../entities/User';
 import { AuthRequest } from '../middleware/auth';
 import { usersLogger, logError } from '../utils/logger';
+import { EmailService } from '../services/emailService';
 
 export class UserController {
   static async getAllUsers(req: AuthRequest, res: Response) {
@@ -77,11 +78,11 @@ export class UserController {
         user,
       });
     } catch (error) {
-      logError(error as Error, {
-        action: 'getUserById',
-        userId: id,
-        adminId: req.user?.id,
-      });
+      // logError(error as Error, {
+      //   action: 'getUserById',
+      //   userId: id,
+      //   adminId: req.user?.id,
+      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -161,20 +162,20 @@ export class UserController {
         },
       });
     } catch (error) {
-      logError(error as Error, {
-        action: 'updateUser',
-        userId: id,
-        adminId: req.user?.id,
-      });
+      // logError(error as Error, {
+      //   action: 'updateUser',
+      //   userId: id,
+      //   adminId: req.user?.id,
+      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
 
   static async deleteUser(req: AuthRequest, res: Response) {
-    try {
-      const { id } = req.params;
-      const userRepository = AppDataSource.getRepository(User);
+    const { id } = req.params;
+    const userRepository = AppDataSource.getRepository(User);
 
+    try {
       const user = await userRepository.findOne({ where: { id } });
 
       if (!user) {
@@ -204,6 +205,33 @@ export class UserController {
         role: user.role,
       };
 
+      // Send deletion notification email before deleting
+      // Don't fail deletion if email fails
+      try {
+        await EmailService.sendAccountDeletionEmail(
+          userData.email,
+          userData.firstName
+        );
+        usersLogger.info('Account deletion email sent', {
+          action: 'deleteUser',
+          userId: userData.id,
+          email: userData.email,
+        });
+      } catch (emailError) {
+        // Log email error but don't fail the deletion
+        logError(emailError as Error, {
+          action: 'deleteUser',
+          userId: userData.id,
+          context: 'Failed to send account deletion email',
+        });
+        usersLogger.warn('Account deletion email failed, but user deletion will proceed', {
+          action: 'deleteUser',
+          userId: userData.id,
+          email: userData.email,
+        });
+      }
+
+      // Delete the user
       await userRepository.remove(user);
 
       usersLogger.info('User deleted successfully', {

@@ -26,7 +26,7 @@ router.put(
   authenticate,
   authorize(UserRole.ADMIN),
   UserController.updateUser
-);
+);  
 router.delete(
   '/:id',
   authenticate,

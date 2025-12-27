@@ -84,11 +84,11 @@ export class BookController {
         book,
       });
     } catch (error) {
-      logError(error as Error, {
-        action: 'getBookById',
-        bookId: id,
-        userId: req.user?.id,
-      });
+      // logError(error as Error, {
+      //   action: 'getBookById',
+      //   bookId: id,
+      //   userId: req.user?.id,
+      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -133,11 +133,11 @@ export class BookController {
         book,
       });
     } catch (error) {
-      logError(error as Error, {
-        action: 'createBook',
-        adminId: req.user?.id,
-        bookData: createBookDto,
-      });
+      // logError(error as Error, {
+      //   action: 'createBook',
+      //   adminId: req.user?.id,
+      //   bookData: createBookDto,
+      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -191,11 +191,11 @@ export class BookController {
         book,
       });
     } catch (error) {
-      logError(error as Error, {
-        action: 'updateBook',
-        bookId: id,
-        adminId: req.user?.id,
-      });
+      // logError(error as Error, {
+      //   action: 'updateBook',
+      //   bookId: id,
+      //   adminId: req.user?.id,
+      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -237,11 +237,11 @@ export class BookController {
         message: 'Book deleted successfully',
       });
     } catch (error) {
-      logError(error as Error, {
-        action: 'deleteBook',
-        bookId: id,
-        adminId: req.user?.id,
-      });
+      // logError(error as Error, {
+      //   action: 'deleteBook',
+      //   bookId: id,
+      //   adminId: req.user?.id,
+      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }

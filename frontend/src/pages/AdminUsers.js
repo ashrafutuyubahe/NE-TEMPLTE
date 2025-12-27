@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { userAPI } from '../utils/api';
+import logger from '../utils/logger';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -26,25 +27,74 @@ const AdminUsers = () => {
 
   const handleToggleActive = async (user) => {
     try {
-      await userAPI.update(user.id, { isActive: !user.isActive });
-      setMessage(`User ${!user.isActive ? 'activated' : 'deactivated'} successfully!`);
+      const newStatus = !user.isActive;
+      
+      logger.info('Toggling user active status', {
+        userId: user.id,
+        userEmail: user.email,
+        oldStatus: user.isActive,
+        newStatus,
+      });
+
+      await userAPI.update(user.id, { isActive: newStatus });
+      
+      logger.info('User status updated successfully', {
+        userId: user.id,
+        newStatus,
+      });
+
+      setMessage(`User ${newStatus ? 'activated' : 'deactivated'} successfully!`);
       fetchUsers();
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Operation failed');
+      logger.error('Failed to toggle user status', {
+        userId: user.id,
+        error: err.message,
+        isNetworkError: err.isNetworkError,
+        status: err.status,
+        responseData: err.responseData,
+      });
+
+      const errorMsg = err.message || err.response?.data?.message || 'Operation failed';
+      setMessage(errorMsg);
       setTimeout(() => setMessage(''), 5000);
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
+    const user = users.find(u => u.id === id);
+    const confirmMessage = user 
+      ? `Are you sure you want to delete ${user.firstName} ${user.lastName} (${user.email})? This action cannot be undone.`
+      : 'Are you sure you want to delete this user? This action cannot be undone.';
+
+    if (window.confirm(confirmMessage)) {
       try {
+        logger.info('Deleting user', {
+          userId: id,
+          userEmail: user?.email,
+        });
+
         await userAPI.delete(id);
+        
+        logger.info('User deleted successfully', {
+          userId: id,
+          userEmail: user?.email,
+        });
+
         setMessage('User deleted successfully!');
         fetchUsers();
         setTimeout(() => setMessage(''), 3000);
       } catch (err) {
-        setMessage(err.response?.data?.message || 'Failed to delete user');
+        logger.error('Failed to delete user', {
+          userId: id,
+          error: err.message,
+          isNetworkError: err.isNetworkError,
+          status: err.status,
+          responseData: err.responseData,
+        });
+
+        const errorMsg = err.message || err.response?.data?.message || 'Failed to delete user';
+        setMessage(errorMsg);
         setTimeout(() => setMessage(''), 5000);
       }
     }
@@ -92,8 +142,9 @@ const AdminUsers = () => {
                 <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                 <td>
                   <button
-                    className="btn btn-secondary"
+                    className={`btn ${user.isActive ? 'btn-warning' : 'btn-success'}`}
                     onClick={() => handleToggleActive(user)}
+                    style={{ marginRight: '5px' }}
                   >
                     {user.isActive ? 'Deactivate' : 'Activate'}
                   </button>

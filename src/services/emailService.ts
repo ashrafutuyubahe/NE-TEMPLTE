@@ -87,5 +87,23 @@ export class EmailService {
     `;
     return this.sendEmail(to, subject, html);
   }
+
+  static async sendAccountDeletionEmail(
+    to: string,
+    firstName: string
+  ) {
+    const subject = 'Account Deletion Notice';
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>Account Deletion Notice</h2>
+        <p>Hello ${firstName},</p>
+        <p>This is to inform you that your account with the Library Management System has been deleted by an administrator.</p>
+        <p>If you believe this was done in error, please contact the library administration immediately.</p>
+        <p>All your data and borrowing history have been removed from our system.</p>
+        <p>Best regards,<br>Library Management Team</p>
+      </div>
+    `;
+    return this.sendEmail(to, subject, html);
+  }
 }
 

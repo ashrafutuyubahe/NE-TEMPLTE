@@ -10,6 +10,7 @@ const Books = ({ user }) => {
 
   useEffect(() => {
     fetchBooks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchBooks = async () => {

@@ -41,14 +41,14 @@ const AdminBooks = () => {
     e.preventDefault();
     setMessage('');
 
-    try {
-      // Convert string numbers to integers
-      const submitData = {
-        ...formData,
-        totalCopies: parseInt(formData.totalCopies) || 1,
-        publicationYear: formData.publicationYear ? parseInt(formData.publicationYear) : undefined,
-      };
+    // Convert string numbers to integers
+    const submitData = {
+      ...formData,
+      totalCopies: parseInt(formData.totalCopies) || 1,
+      publicationYear: formData.publicationYear ? parseInt(formData.publicationYear) : undefined,
+    };
 
+    try {
       if (editingBook) {
         logger.info('Updating book', {
           bookId: editingBook.id,
@@ -196,11 +196,18 @@ const AdminBooks = () => {
       </div>
 
       {showModal && (
-        <div className="modal">
+        <div className="modal" onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowModal(false);
+          }
+        }}>
           <div className="modal-content">
-            <span className="close" onClick={() => setShowModal(false)}>&times;</span>
-            <h2>{editingBook ? 'Edit Book' : 'Add New Book'}</h2>
+            <div className="modal-header">
+              <h2>{editingBook ? 'Edit Book' : 'Add New Book'}</h2>
+              <button className="close" onClick={() => setShowModal(false)}>&times;</button>
+            </div>
             <form onSubmit={handleSubmit}>
+              <div className="modal-body">
               <div className="form-group">
                 <label>Title *</label>
                 <input
@@ -270,12 +277,15 @@ const AdminBooks = () => {
                   onChange={(e) => setFormData({ ...formData, publicationYear: e.target.value })}
                 />
               </div>
-              <button type="submit" className="btn btn-primary">
-                {editingBook ? 'Update' : 'Create'}
-              </button>
-              <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
-                Cancel
-              </button>
+              </div>
+              <div className="modal-footer">
+                <button type="submit" className="btn btn-primary">
+                  {editingBook ? 'Update' : 'Create'}
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                  Cancel
+                </button>
+              </div>
             </form>
           </div>
         </div>
