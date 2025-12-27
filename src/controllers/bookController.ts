@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AppDataSource } from '../config/data-source';
 import { Book } from '../entities/Book';
+import { BorrowRequest, BorrowStatus } from '../entities/BorrowRequest';
 import { AuthRequest } from '../middleware/auth';
 import { CreateBookDto, UpdateBookDto } from '../dto/BookDto';
 import { booksLogger, logError } from '../utils/logger';
@@ -201,10 +202,11 @@ export class BookController {
   }
 
   static async deleteBook(req: AuthRequest, res: Response) {
-    try {
-      const { id } = req.params;
-      const bookRepository = AppDataSource.getRepository(Book);
+    const { id } = req.params;
+    const bookRepository = AppDataSource.getRepository(Book);
+    const borrowRepository = AppDataSource.getRepository(BorrowRequest);
 
+    try {
       const book = await bookRepository.findOne({ where: { id } });
 
       if (!book) {
@@ -214,6 +216,49 @@ export class BookController {
           adminId: req.user?.id,
         });
         return res.status(404).json({ message: 'Book not found' });
+      }
+
+      // Check if there are any borrow requests for this book
+      const borrowRequests = await borrowRepository.find({
+        where: { bookId: id },
+      });
+
+      if (borrowRequests.length > 0) {
+        // Check for active borrow requests (pending or approved)
+        const activeRequests = borrowRequests.filter(
+          (req) => req.status === BorrowStatus.PENDING || req.status === BorrowStatus.APPROVED
+        );
+
+        if (activeRequests.length > 0) {
+          booksLogger.warn('Book deletion failed - has active borrow requests', {
+            action: 'deleteBook',
+            bookId: id,
+            bookTitle: book.title,
+            activeRequestsCount: activeRequests.length,
+            adminId: req.user?.id,
+          });
+          return res.status(400).json({
+            message: `Cannot delete book. There are ${activeRequests.length} active borrow request(s) for this book. Please wait for all books to be returned or reject pending requests first.`,
+          });
+        }
+
+        // If there are only returned/rejected requests, delete them first
+        // This allows deletion of books with only historical records
+        try {
+          await borrowRepository.remove(borrowRequests);
+          booksLogger.info('Deleted associated borrow request history', {
+            action: 'deleteBook',
+            bookId: id,
+            deletedRequestsCount: borrowRequests.length,
+          });
+        } catch (deleteError) {
+          booksLogger.warn('Failed to delete borrow request history', {
+            action: 'deleteBook',
+            bookId: id,
+            error: (deleteError as Error).message,
+          });
+          // Continue with book deletion attempt
+        }
       }
 
       const bookData = {
@@ -237,11 +282,26 @@ export class BookController {
         message: 'Book deleted successfully',
       });
     } catch (error) {
-      // logError(error as Error, {
-      //   action: 'deleteBook',
-      //   bookId: id,
-      //   adminId: req.user?.id,
-      // });
+      const errorMessage = (error as Error).message || 'Unknown error';
+      
+      // Check if it's a foreign key constraint error
+      if (errorMessage.includes('foreign key constraint') || errorMessage.includes('violates foreign key')) {
+        booksLogger.error('Book deletion failed - foreign key constraint', {
+          action: 'deleteBook',
+          bookId: id,
+          error: errorMessage,
+          adminId: req.user?.id,
+        });
+        return res.status(400).json({
+          message: 'Cannot delete book. This book has associated borrow records. Please ensure all borrow requests are handled first.',
+        });
+      }
+
+      logError(error as Error, {
+        action: 'deleteBook',
+        bookId: id,
+        adminId: req.user?.id,
+      });
       res.status(500).json({ message: 'Internal server error' });
     }
   }

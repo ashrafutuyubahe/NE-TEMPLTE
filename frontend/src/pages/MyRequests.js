@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { borrowAPI } from '../utils/api';
 
-const MyRequests = () => {
+const MyRequests = ({ user }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchRequests = async () => {

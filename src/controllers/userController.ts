@@ -2,6 +2,8 @@ import { Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { AppDataSource } from '../config/data-source';
 import { User, UserRole } from '../entities/User';
+import { BorrowRequest, BorrowStatus } from '../entities/BorrowRequest';
+import { Book } from '../entities/Book';
 import { AuthRequest } from '../middleware/auth';
 import { usersLogger, logError } from '../utils/logger';
 import { EmailService } from '../services/emailService';
@@ -174,6 +176,7 @@ export class UserController {
   static async deleteUser(req: AuthRequest, res: Response) {
     const { id } = req.params;
     const userRepository = AppDataSource.getRepository(User);
+    const borrowRepository = AppDataSource.getRepository(BorrowRequest);
 
     try {
       const user = await userRepository.findOne({ where: { id } });
@@ -204,6 +207,70 @@ export class UserController {
         lastName: user.lastName,
         role: user.role,
       };
+
+      // Check if there are any borrow requests for this user
+      const borrowRequests = await borrowRepository.find({
+        where: { userId: id },
+      });
+
+      if (borrowRequests.length > 0) {
+        // Check for approved requests that need book availability updates
+        const approvedRequests = borrowRequests.filter(
+          (req) => req.status === BorrowStatus.APPROVED
+        );
+
+        // If there are approved requests, return the books (increase available copies)
+        if (approvedRequests.length > 0) {
+          const bookRepository = AppDataSource.getRepository(Book);
+
+          for (const request of approvedRequests) {
+            try {
+              const book = await bookRepository.findOne({
+                where: { id: request.bookId },
+              });
+              if (book) {
+                book.availableCopies = Math.min(
+                  book.totalCopies,
+                  book.availableCopies + 1
+                );
+                await bookRepository.save(book);
+                usersLogger.info('Book returned due to user deletion', {
+                  action: 'deleteUser',
+                  bookId: book.id,
+                  bookTitle: book.title,
+                  userId: id,
+                });
+              }
+            } catch (bookError) {
+              usersLogger.warn('Failed to return book during user deletion', {
+                action: 'deleteUser',
+                bookId: request.bookId,
+                userId: id,
+                error: (bookError as Error).message,
+              });
+              // Continue with other books
+            }
+          }
+        }
+
+        // Delete all borrow requests (active and historical) regardless of status
+        try {
+          await borrowRepository.remove(borrowRequests);
+          usersLogger.info('Deleted all associated borrow requests', {
+            action: 'deleteUser',
+            userId: id,
+            deletedRequestsCount: borrowRequests.length,
+            approvedRequestsCount: approvedRequests.length,
+          });
+        } catch (deleteError) {
+          usersLogger.warn('Failed to delete borrow request history', {
+            action: 'deleteUser',
+            userId: id,
+            error: (deleteError as Error).message,
+          });
+          // Continue with user deletion attempt
+        }
+      }
 
       // Send deletion notification email before deleting
       // Don't fail deletion if email fails
@@ -246,6 +313,21 @@ export class UserController {
         message: 'User deleted successfully',
       });
     } catch (error) {
+      const errorMessage = (error as Error).message || 'Unknown error';
+      
+      // Check if it's a foreign key constraint error
+      if (errorMessage.includes('foreign key constraint') || errorMessage.includes('violates foreign key')) {
+        usersLogger.error('User deletion failed - foreign key constraint', {
+          action: 'deleteUser',
+          userId: id,
+          error: errorMessage,
+          adminId: req.user?.id,
+        });
+        return res.status(400).json({
+          message: 'Cannot delete user. This user has associated borrow records. Please ensure all borrow requests are handled first.',
+        });
+      }
+
       logError(error as Error, {
         action: 'deleteUser',
         userId: id,
