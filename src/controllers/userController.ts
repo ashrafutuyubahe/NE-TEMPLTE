@@ -80,11 +80,6 @@ export class UserController {
         user,
       });
     } catch (error) {
-      // logError(error as Error, {
-      //   action: 'getUserById',
-      //   userId: id,
-      //   adminId: req.user?.id,
-      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -106,7 +101,6 @@ export class UserController {
         return res.status(404).json({ message: 'User not found' });
       }
 
-      // Only admin can change role
       if (role && req.user!.role !== UserRole.ADMIN) {
         usersLogger.warn('Unauthorized role change attempt', {
           action: 'updateUser',
@@ -164,11 +158,6 @@ export class UserController {
         },
       });
     } catch (error) {
-      // logError(error as Error, {
-      //   action: 'updateUser',
-      //   userId: id,
-      //   adminId: req.user?.id,
-      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -190,7 +179,6 @@ export class UserController {
         return res.status(404).json({ message: 'User not found' });
       }
 
-      // Prevent deleting own account
       if (user.id === req.user!.id) {
         usersLogger.warn('User attempted to delete own account', {
           action: 'deleteUser',
@@ -208,18 +196,15 @@ export class UserController {
         role: user.role,
       };
 
-      // Check if there are any borrow requests for this user
       const borrowRequests = await borrowRepository.find({
         where: { userId: id },
       });
 
       if (borrowRequests.length > 0) {
-        // Check for approved requests that need book availability updates
         const approvedRequests = borrowRequests.filter(
           (req) => req.status === BorrowStatus.APPROVED
         );
 
-        // If there are approved requests, return the books (increase available copies)
         if (approvedRequests.length > 0) {
           const bookRepository = AppDataSource.getRepository(Book);
 
@@ -241,19 +226,17 @@ export class UserController {
                   userId: id,
                 });
               }
-            } catch (bookError) {
+              } catch (bookError) {
               usersLogger.warn('Failed to return book during user deletion', {
                 action: 'deleteUser',
                 bookId: request.bookId,
                 userId: id,
                 error: (bookError as Error).message,
               });
-              // Continue with other books
             }
           }
         }
 
-        // Delete all borrow requests (active and historical) regardless of status
         try {
           await borrowRepository.remove(borrowRequests);
           usersLogger.info('Deleted all associated borrow requests', {
@@ -268,12 +251,9 @@ export class UserController {
             userId: id,
             error: (deleteError as Error).message,
           });
-          // Continue with user deletion attempt
         }
       }
 
-      // Send deletion notification email before deleting
-      // Don't fail deletion if email fails
       try {
         await EmailService.sendAccountDeletionEmail(
           userData.email,
@@ -285,7 +265,6 @@ export class UserController {
           email: userData.email,
         });
       } catch (emailError) {
-        // Log email error but don't fail the deletion
         logError(emailError as Error, {
           action: 'deleteUser',
           userId: userData.id,
@@ -298,7 +277,6 @@ export class UserController {
         });
       }
 
-      // Delete the user
       await userRepository.remove(user);
 
       usersLogger.info('User deleted successfully', {
@@ -315,7 +293,6 @@ export class UserController {
     } catch (error) {
       const errorMessage = (error as Error).message || 'Unknown error';
       
-      // Check if it's a foreign key constraint error
       if (errorMessage.includes('foreign key constraint') || errorMessage.includes('violates foreign key')) {
         usersLogger.error('User deletion failed - foreign key constraint', {
           action: 'deleteUser',

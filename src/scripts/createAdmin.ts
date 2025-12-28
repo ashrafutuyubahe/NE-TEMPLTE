@@ -12,7 +12,6 @@ async function createAdmin() {
 
     const userRepository = AppDataSource.getRepository(User);
 
-    // Check if admin already exists
     const existingAdmin = await userRepository.findOne({
       where: { email: 'admin@library.com' },
     });
@@ -22,8 +21,6 @@ async function createAdmin() {
       await AppDataSource.destroy();
       return;
     }
-
-    // Create admin user
     const hashedPassword = await bcrypt.hash('admin123', 10);
     const admin = userRepository.create({
       email: 'admin@library.com',

@@ -16,7 +16,6 @@ export class BorrowController {
       const bookRepository = AppDataSource.getRepository(Book);
       const userRepository = AppDataSource.getRepository(User);
 
-      // Check if user exists and is active
       const user = await userRepository.findOne({
         where: { id: req.user!.id },
       });
@@ -41,7 +40,6 @@ export class BorrowController {
         });
       }
 
-      // Check if book exists
       const book = await bookRepository.findOne({
         where: { id: createBorrowDto.bookId },
       });
@@ -52,10 +50,9 @@ export class BorrowController {
           userId: user.id,
           bookId: createBorrowDto.bookId,
         });
-        return res.status(404).json({ message: 'Book not found' });
+        return res.status(404).json({ message: 'Book not found'         });
       }
 
-      // Check if book is available (has available copies)
       if (book.availableCopies <= 0) {
         borrowsLogger.warn('Borrow request failed - book not available', {
           action: 'createBorrowRequest',
@@ -69,7 +66,6 @@ export class BorrowController {
         });
       }
 
-      // Check if book is already borrowed by this user (any status except returned)
       const existingBorrow = await borrowRepository.findOne({
         where: {
           userId: req.user!.id,
@@ -102,12 +98,8 @@ export class BorrowController {
             message: 'You already have this book borrowed. Please return it first.',
           });
         }
-
-        // If the last request was rejected, allow new request
-        // If returned, allow new request
       }
 
-      // Check if user has overdue books
       const overdueBooks = await borrowRepository.find({
         where: {
           userId: req.user!.id,
@@ -132,8 +124,6 @@ export class BorrowController {
         });
       }
 
-      // Check if there are any approved borrows for this book that haven't been returned
-      // This ensures we don't allow borrowing when all copies are actually out
       const activeBorrowsForBook = await borrowRepository.count({
         where: {
           bookId: createBorrowDto.bookId,
@@ -141,7 +131,6 @@ export class BorrowController {
         },
       });
 
-      // Double-check availability considering actual approved borrows
       if (activeBorrowsForBook >= book.totalCopies) {
         borrowsLogger.warn('Borrow request failed - all copies borrowed', {
           action: 'createBorrowRequest',
@@ -155,7 +144,6 @@ export class BorrowController {
         });
       }
 
-      // Validate borrow duration
       const borrowDuration = createBorrowDto.borrowDurationDays || 7;
       if (borrowDuration < 1 || borrowDuration > 30) {
         return res.status(400).json({
@@ -163,7 +151,6 @@ export class BorrowController {
         });
       }
 
-      // Create borrow request
       const borrowRequest = borrowRepository.create({
         userId: req.user!.id,
         bookId: createBorrowDto.bookId,
@@ -189,11 +176,6 @@ export class BorrowController {
         borrowRequest,
       });
     } catch (error) {
-      // logError(error as Error, {
-      //   action: 'createBorrowRequest',
-      //   userId: req.user?.id,
-      //   bookId: createBorrowDto.bookId,
-      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -292,11 +274,6 @@ export class BorrowController {
         borrowRequest,
       });
     } catch (error) {
-      // logError(error as Error, {
-      //   action: 'getBorrowRequestById',
-      //   requestId: id,
-      //   userId: req.user?.id,
-      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -357,9 +334,7 @@ export class BorrowController {
       const oldStatus = borrowRequest.status;
       const newStatus = updateDto.status as BorrowStatus;
 
-      // Validate status transition
       if (updateDto.status) {
-        // Validate status value
         const validStatuses = Object.values(BorrowStatus);
         if (!validStatuses.includes(newStatus)) {
           return res.status(400).json({
@@ -367,7 +342,6 @@ export class BorrowController {
           });
         }
 
-        // Validate status transitions
         if (oldStatus === BorrowStatus.RETURNED) {
           return res.status(400).json({
             message: 'Cannot change status of a returned book',
@@ -387,7 +361,6 @@ export class BorrowController {
         }
 
         if (newStatus === BorrowStatus.APPROVED) {
-          // Check if book still exists and is available
           const book = await bookRepository.findOne({
             where: { id: borrowRequest.bookId },
           });
@@ -396,15 +369,12 @@ export class BorrowController {
             return res.status(404).json({ message: 'Book not found' });
           }
 
-          // Check if book is still available
           if (book.availableCopies <= 0) {
             return res.status(400).json({
               message: 'Book is no longer available. All copies are currently borrowed.',
             });
           }
 
-          // Check if there are other approved borrows for this book
-          // Use query builder to exclude current request
           const activeBorrowsForBook = await borrowRepository
             .createQueryBuilder('borrow')
             .where('borrow.bookId = :bookId', { bookId: borrowRequest.bookId })
@@ -412,7 +382,6 @@ export class BorrowController {
             .andWhere('borrow.id != :currentId', { currentId: borrowRequest.id })
             .getCount();
 
-          // Add 1 for the current request being approved
           const totalBorrowsAfterApproval = activeBorrowsForBook + 1;
 
           if (totalBorrowsAfterApproval > book.totalCopies) {
@@ -421,7 +390,6 @@ export class BorrowController {
             });
           }
 
-          // Set borrow date and due date
           borrowRequest.borrowDate = new Date();
           const dueDate = new Date();
           dueDate.setDate(
@@ -429,11 +397,9 @@ export class BorrowController {
           );
           borrowRequest.dueDate = dueDate;
 
-          // Decrease available copies
           book.availableCopies = Math.max(0, book.availableCopies - 1);
           await bookRepository.save(book);
         } else if (newStatus === BorrowStatus.REJECTED) {
-          // Only allow rejecting pending requests
           if (oldStatus !== BorrowStatus.PENDING) {
             return res.status(400).json({
               message: 'Only pending requests can be rejected',
@@ -442,19 +408,16 @@ export class BorrowController {
 
           borrowRequest.rejectionReason = updateDto.rejectionReason || 'No reason provided';
         } else if (newStatus === BorrowStatus.RETURNED) {
-          // Only allow returning approved books
           if (oldStatus !== BorrowStatus.APPROVED) {
             return res.status(400).json({
               message: 'Only approved books can be marked as returned',
             });
           }
 
-          // Increase available copies
           const book = await bookRepository.findOne({
             where: { id: borrowRequest.bookId },
           });
           if (book) {
-            // Don't exceed total copies
             book.availableCopies = Math.min(
               book.totalCopies,
               book.availableCopies + 1
@@ -469,7 +432,6 @@ export class BorrowController {
 
       await borrowRepository.save(borrowRequest);
 
-      // Log the status change
       if (updateDto.status && oldStatus !== updateDto.status) {
         borrowsLogger.info('Borrow request status updated', {
           action: 'updateBorrowRequest',
@@ -485,7 +447,6 @@ export class BorrowController {
           rejectionReason: borrowRequest.rejectionReason,
         });
 
-        // Send email notification if status changed
         try {
           const user = await userRepository.findOne({
             where: { id: borrowRequest.userId },
@@ -519,11 +480,6 @@ export class BorrowController {
         borrowRequest,
       });
     } catch (error) {
-      // logError(error as Error, {
-      //   action: 'updateBorrowRequest',
-      //   requestId: id,
-      //   adminId: req.user?.id,
-      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }

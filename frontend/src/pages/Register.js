@@ -28,7 +28,6 @@ const Register = ({ onLogin }) => {
       }
     } catch (err) {
       let errorMsg = err.message || err.response?.data?.message || 'Registration failed';
-      // Handle validation errors
       if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
         errorMsg = err.response.data.errors.join(', ');
       }

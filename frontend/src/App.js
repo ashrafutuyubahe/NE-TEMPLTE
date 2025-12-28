@@ -19,7 +19,6 @@ function App() {
   useEffect(() => {
     const token = getToken();
     const userData = getUser();
-    // Validate token and user data
     if (token && userData && userData.id && userData.email) {
       setUser(userData);
     } else {

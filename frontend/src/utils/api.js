@@ -1,18 +1,14 @@
 import axios from 'axios';
 import logger from './logger';
 
-// Get API URL from environment or use default
 const getApiUrl = () => {
-  // Check if we're in development and backend is on different port
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
-  // Default to same origin in production, or localhost:3000 in development
   const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   if (isDevelopment) {
     return 'http://localhost:3000/api';
   }
-  // In production, assume API is on same origin
   return '/api';
 };
 
@@ -29,10 +25,9 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 second timeout
+  timeout: 30000,
 });
 
-// Add token to requests and log requests
 api.interceptors.request.use(
   (config) => {
     const startTime = Date.now();
@@ -52,7 +47,6 @@ api.interceptors.request.use(
       });
     }
 
-    // Log the request
     logger.apiRequest(
       config.method?.toUpperCase() || 'UNKNOWN',
       config.url || 'UNKNOWN',
@@ -71,14 +65,12 @@ api.interceptors.request.use(
   }
 );
 
-// Handle auth errors and network errors with logging
 api.interceptors.response.use(
   (response) => {
     const duration = response.config.metadata?.startTime
       ? Date.now() - response.config.metadata.startTime
       : null;
 
-    // Log successful response
     logger.apiResponse(
       response.config.method?.toUpperCase() || 'UNKNOWN',
       response.config.url || 'UNKNOWN',
@@ -97,10 +89,8 @@ api.interceptors.response.use(
     const method = error.config?.method?.toUpperCase() || 'UNKNOWN';
     const url = error.config?.url || 'UNKNOWN';
 
-    // Log the error with full details
     logger.apiError(method, url, error, duration);
 
-    // Handle network errors
     if (!error.response) {
       const networkError = {
         message: 'Network error. Please check your connection and ensure the backend server is running.',
@@ -122,7 +112,6 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const responseData = error.response?.data;
 
-    // Handle 401 - Unauthorized
     if (status === 401) {
       logger.warn('Unauthorized access - clearing auth data', {
         url,
@@ -132,7 +121,6 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       
-      // Only redirect if not already on login/register page
       if (!window.location.pathname.includes('/login') && 
           !window.location.pathname.includes('/register')) {
         logger.info('Redirecting to login page');
@@ -146,7 +134,6 @@ api.interceptors.response.use(
       });
     }
 
-    // Handle 403 - Forbidden
     if (status === 403) {
       logger.warn('Forbidden access', {
         url,
@@ -161,7 +148,6 @@ api.interceptors.response.use(
       });
     }
 
-    // Handle validation errors
     if (status === 400 && responseData?.errors) {
       logger.warn('Validation error', {
         url,
@@ -179,7 +165,6 @@ api.interceptors.response.use(
       });
     }
 
-    // Handle 404 - Not Found
     if (status === 404) {
       logger.warn('Resource not found', {
         url,
@@ -187,7 +172,6 @@ api.interceptors.response.use(
       });
     }
 
-    // Handle 500 - Server Error
     if (status >= 500) {
       logger.error('Server error', {
         url,
@@ -197,7 +181,6 @@ api.interceptors.response.use(
       });
     }
 
-    // Handle other errors
     const errorMessage = responseData?.message || error.message || 'An error occurred';
     
     logger.warn('API Error Response', {
@@ -216,13 +199,11 @@ api.interceptors.response.use(
   }
 );
 
-// Auth APIs
 export const authAPI = {
   login: (email, password) => api.post('/auth/login', { email, password }),
   register: (data) => api.post('/auth/register', data),
 };
 
-// Book APIs
 export const bookAPI = {
   getAll: (params) => api.get('/books', { params }),
   getById: (id) => api.get(`/books/${id}`),
@@ -231,7 +212,6 @@ export const bookAPI = {
   delete: (id) => api.delete(`/books/${id}`),
 };
 
-// Borrow APIs
 export const borrowAPI = {
   create: (data) => api.post('/borrow', data),
   getMyRequests: () => api.get('/borrow/my-requests'),
@@ -241,7 +221,6 @@ export const borrowAPI = {
   update: (id, data) => api.put(`/borrow/${id}`, data),
 };
 
-// User APIs
 export const userAPI = {
   getMe: () => api.get('/users/me'),
   getAll: (params) => api.get('/users', { params }),

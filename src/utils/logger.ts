@@ -3,13 +3,11 @@ import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
 import fs from 'fs';
 
-// Create logs directory if it doesn't exist
 const logsDir = path.join(process.cwd(), 'logs');
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
 
-// Define log format
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
@@ -17,7 +15,6 @@ const logFormat = winston.format.combine(
   winston.format.json()
 );
 
-// Console format for development
 const consoleFormat = winston.format.combine(
   winston.format.colorize(),
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -30,7 +27,6 @@ const consoleFormat = winston.format.combine(
   })
 );
 
-// Create daily rotate file transport for combined logs
 const combinedFileTransport = new DailyRotateFile({
   filename: path.join(logsDir, 'combined-%DATE%.log'),
   datePattern: 'YYYY-MM-DD',
@@ -39,7 +35,6 @@ const combinedFileTransport = new DailyRotateFile({
   format: logFormat,
 });
 
-// Create daily rotate file transport for error logs
 const errorFileTransport = new DailyRotateFile({
   filename: path.join(logsDir, 'error-%DATE%.log'),
   datePattern: 'YYYY-MM-DD',
@@ -49,7 +44,6 @@ const errorFileTransport = new DailyRotateFile({
   format: logFormat,
 });
 
-// Create daily rotate file transport for activity logs
 const activityFileTransport = new DailyRotateFile({
   filename: path.join(logsDir, 'activity-%DATE%.log'),
   datePattern: 'YYYY-MM-DD',
@@ -58,7 +52,6 @@ const activityFileTransport = new DailyRotateFile({
   format: logFormat,
 });
 
-// Create daily rotate file transport for authentication logs
 const authFileTransport = new DailyRotateFile({
   filename: path.join(logsDir, 'auth-%DATE%.log'),
   datePattern: 'YYYY-MM-DD',
@@ -67,7 +60,6 @@ const authFileTransport = new DailyRotateFile({
   format: logFormat,
 });
 
-// Create daily rotate file transport for book operations logs
 const booksFileTransport = new DailyRotateFile({
   filename: path.join(logsDir, 'books-%DATE%.log'),
   datePattern: 'YYYY-MM-DD',
@@ -76,7 +68,6 @@ const booksFileTransport = new DailyRotateFile({
   format: logFormat,
 });
 
-// Create daily rotate file transport for borrow operations logs
 const borrowsFileTransport = new DailyRotateFile({
   filename: path.join(logsDir, 'borrows-%DATE%.log'),
   datePattern: 'YYYY-MM-DD',
@@ -85,7 +76,6 @@ const borrowsFileTransport = new DailyRotateFile({
   format: logFormat,
 });
 
-// Create daily rotate file transport for user management logs
 const usersFileTransport = new DailyRotateFile({
   filename: path.join(logsDir, 'users-%DATE%.log'),
   datePattern: 'YYYY-MM-DD',
@@ -94,7 +84,6 @@ const usersFileTransport = new DailyRotateFile({
   format: logFormat,
 });
 
-// Main logger
 export const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: logFormat,
@@ -121,7 +110,6 @@ export const logger = winston.createLogger({
   ],
 });
 
-// Add console transport in development
 if (process.env.NODE_ENV !== 'production') {
   logger.add(
     new winston.transports.Console({
@@ -130,7 +118,6 @@ if (process.env.NODE_ENV !== 'production') {
   );
 }
 
-// Specialized loggers for different activities
 export const activityLogger = winston.createLogger({
   level: 'info',
   format: logFormat,
@@ -166,7 +153,6 @@ export const usersLogger = winston.createLogger({
   transports: [usersFileTransport, combinedFileTransport],
 });
 
-// Helper function to log API requests
 export const logApiRequest = (
   action: string,
   userId: string | undefined,
@@ -181,7 +167,6 @@ export const logApiRequest = (
   });
 };
 
-// Helper function to log errors with context
 export const logError = (
   error: Error | string,
   context: {

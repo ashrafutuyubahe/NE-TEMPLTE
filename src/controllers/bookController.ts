@@ -85,11 +85,6 @@ export class BookController {
         book,
       });
     } catch (error) {
-      // logError(error as Error, {
-      //   action: 'getBookById',
-      //   bookId: id,
-      //   userId: req.user?.id,
-      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -99,7 +94,6 @@ export class BookController {
       const createBookDto: CreateBookDto = req.body;
       const bookRepository = AppDataSource.getRepository(Book);
 
-      // Check if ISBN already exists
       const existingBook = await bookRepository.findOne({
         where: { isbn: createBookDto.isbn },
       });
@@ -134,11 +128,6 @@ export class BookController {
         book,
       });
     } catch (error) {
-      // logError(error as Error, {
-      //   action: 'createBook',
-      //   adminId: req.user?.id,
-      //   bookData: createBookDto,
-      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -162,7 +151,6 @@ export class BookController {
 
       const oldData = { ...book };
 
-      // If totalCopies is being updated, adjust availableCopies
       if (updateBookDto.totalCopies !== undefined) {
         const difference = updateBookDto.totalCopies - book.totalCopies;
         book.availableCopies = Math.max(0, book.availableCopies + difference);
@@ -192,11 +180,6 @@ export class BookController {
         book,
       });
     } catch (error) {
-      // logError(error as Error, {
-      //   action: 'updateBook',
-      //   bookId: id,
-      //   adminId: req.user?.id,
-      // });
       res.status(500).json({ message: 'Internal server error' });
     }
   }
@@ -218,13 +201,11 @@ export class BookController {
         return res.status(404).json({ message: 'Book not found' });
       }
 
-      // Check if there are any borrow requests for this book
       const borrowRequests = await borrowRepository.find({
         where: { bookId: id },
       });
 
       if (borrowRequests.length > 0) {
-        // Check for active borrow requests (pending or approved)
         const activeRequests = borrowRequests.filter(
           (req) => req.status === BorrowStatus.PENDING || req.status === BorrowStatus.APPROVED
         );
@@ -242,8 +223,6 @@ export class BookController {
           });
         }
 
-        // If there are only returned/rejected requests, delete them first
-        // This allows deletion of books with only historical records
         try {
           await borrowRepository.remove(borrowRequests);
           booksLogger.info('Deleted associated borrow request history', {
@@ -257,7 +236,6 @@ export class BookController {
             bookId: id,
             error: (deleteError as Error).message,
           });
-          // Continue with book deletion attempt
         }
       }
 
@@ -284,7 +262,6 @@ export class BookController {
     } catch (error) {
       const errorMessage = (error as Error).message || 'Unknown error';
       
-      // Check if it's a foreign key constraint error
       if (errorMessage.includes('foreign key constraint') || errorMessage.includes('violates foreign key')) {
         booksLogger.error('Book deletion failed - foreign key constraint', {
           action: 'deleteBook',

@@ -10,7 +10,7 @@ const Books = ({ user }) => {
 
   useEffect(() => {
     fetchBooks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
 
   const fetchBooks = async () => {
@@ -74,7 +74,6 @@ const Books = ({ user }) => {
 
       setMessage('Borrow request created successfully!');
       setTimeout(() => setMessage(''), 3000);
-      // Refresh books to update availability
       fetchBooks();
     } catch (err) {
       const book = books.find(b => b.id === bookId);

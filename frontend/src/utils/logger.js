@@ -1,4 +1,3 @@
-// Simple logger utility for frontend
 const LOG_LEVELS = {
   ERROR: 0,
   WARN: 1,
@@ -8,7 +7,6 @@ const LOG_LEVELS = {
 
 class Logger {
   constructor() {
-    // Enable logging in development, can be controlled via env
     this.enabled = process.env.NODE_ENV === 'development' || 
                    localStorage.getItem('debug') === 'true';
     this.level = LOG_LEVELS.DEBUG;
@@ -68,7 +66,6 @@ class Logger {
     this.log('DEBUG', message, data);
   }
 
-  // API specific logging methods
   apiRequest(method, url, data = null, headers = {}) {
     this.debug('API Request', {
       method,
@@ -111,10 +108,8 @@ class Logger {
       timestamp: new Date().toISOString(),
     };
 
-    // Log full error details
     this.error('API Error', errorData);
 
-    // Also log to console for easier debugging
     console.group(`❌ API Error: ${method} ${url}`);
     console.error('Error Details:', errorData);
     if (error.response) {
@@ -131,7 +126,6 @@ class Logger {
   sanitizeHeaders(headers) {
     if (!headers) return {};
     const sanitized = { ...headers };
-    // Remove sensitive data
     if (sanitized.Authorization) {
       sanitized.Authorization = 'Bearer ***';
     }
@@ -152,10 +146,8 @@ class Logger {
   }
 }
 
-// Export singleton instance
 export const logger = new Logger();
 
-// Enable/disable logging
 export const enableLogging = () => {
   localStorage.setItem('debug', 'true');
   logger.enabled = true;

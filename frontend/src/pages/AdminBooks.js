@@ -41,7 +41,7 @@ const AdminBooks = () => {
     e.preventDefault();
     setMessage('');
 
-    // Convert string numbers to integers
+    
     const submitData = {
       ...formData,
       totalCopies: parseInt(formData.totalCopies) || 1,

@@ -25,7 +25,6 @@ const Dashboard = ({ user }) => {
       });
     } catch (err) {
       console.error('Failed to fetch stats:', err);
-      // Set default stats on error
       setStats({ pending: 0, approved: 0, returned: 0 });
     } finally {
       setLoading(false);

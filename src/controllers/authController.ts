@@ -14,7 +14,6 @@ export class AuthController {
       const registerDto: RegisterDto = req.body;
       const userRepository = AppDataSource.getRepository(User);
 
-      // Check if user already exists
       const existingUser = await userRepository.findOne({
         where: { email: registerDto.email },
       });
@@ -28,10 +27,8 @@ export class AuthController {
         return res.status(400).json({ message: 'Email already registered' });
       }
 
-      // Hash password
       const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
-      // Create user
       const user = userRepository.create({
         email: registerDto.email,
         password: hashedPassword,
@@ -42,7 +39,6 @@ export class AuthController {
 
       await userRepository.save(user);
 
-      // Send welcome email
       try {
         await EmailService.sendWelcomeEmail(user.email, user.firstName);
         authLogger.info('Welcome email sent', {
@@ -57,10 +53,7 @@ export class AuthController {
           email: user.email,
           context: 'Failed to send welcome email',
         });
-        // Don't fail registration if email fails
       }
-
-      // Generate token
       const token = generateToken({
         id: user.id,
         email: user.email,
@@ -103,7 +96,6 @@ export class AuthController {
       const loginDto: LoginDto = req.body;
       const userRepository = AppDataSource.getRepository(User);
 
-      // Find user
       const user = await userRepository.findOne({
         where: { email: loginDto.email },
       });
@@ -117,7 +109,6 @@ export class AuthController {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
 
-      // Check if user is active
       if (!user.isActive) {
         authLogger.warn('Login attempt with deactivated account', {
           action: 'login',
@@ -128,7 +119,6 @@ export class AuthController {
         return res.status(403).json({ message: 'Account is deactivated' });
       }
 
-      // Verify password
       const isValidPassword = await bcrypt.compare(
         loginDto.password,
         user.password
@@ -143,8 +133,6 @@ export class AuthController {
         });
         return res.status(401).json({ message: 'Invalid credentials' });
       }
-
-      // Generate token
       const token = generateToken({
         id: user.id,
         email: user.email,
