@@ -7,7 +7,7 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
-// Initialize database connection
+
 AppDataSource.initialize()
   .then(() => {
     logger.info('Database connected successfully', {
@@ -16,7 +16,7 @@ AppDataSource.initialize()
       database: process.env.DB_NAME,
     });
 
-    // Start server
+   
     app.listen(PORT, () => {
       logger.info('Server started successfully', {
         action: 'server_start',
